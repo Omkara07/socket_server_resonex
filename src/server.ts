@@ -55,7 +55,7 @@ app.get("/self-call", (req: Request, res: Response) => {
 });
 
 // Start the server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server is running`);
 
     // Set up a periodic self-call every 20 seconds
