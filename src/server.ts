@@ -18,7 +18,6 @@ const io = new Server(server, {
         origin: "*",
         methods: ["GET", "POST"],
         credentials: true,
-        allowedHeaders: ["Access-Control-Allow-Origin"]
     }
 });
 // Socket.io connection handling
