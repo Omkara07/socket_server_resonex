@@ -13,7 +13,6 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 const io = new Server(server, {
-    transports: ["websocket"],
     cors: {
         origin: "*",
         methods: ["GET", "POST"],
