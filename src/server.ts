@@ -3,9 +3,17 @@ import http from "http";
 import { Server } from "socket.io";
 import { HandleJoinRoomSocket, HandleleaveRoomSocket, HandleSongQueueSocket, HandleVideoStateSocket } from './socket/handlers';
 import axios from 'axios';
+import cors from "cors";
 
 const app = express();
 const server = http.createServer(app);
+
+
+app.use(cors({
+    origin: "*",
+    methods: ["GET", "POST"],
+    credentials: true
+}));
 
 // Serve a basic route
 app.get("/", (req: Request, res: Response) => {
