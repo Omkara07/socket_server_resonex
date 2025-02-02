@@ -17,7 +17,8 @@ const io = new Server(server, {
     cors: {
         origin: "*",
         methods: ["GET", "POST"],
-        credentials: true
+        credentials: true,
+        allowedHeaders: ["Access-Control-Allow-Origin"]
     }
 });
 // Socket.io connection handling
