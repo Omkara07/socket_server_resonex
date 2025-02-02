@@ -1,0 +1,85 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  name          String?
+  password      String?
+  image         String   @default("https://img.freepik.com/premium-photo/sticker-boy-using-headphones-anime-st-creative-design-bold-line-cute-kawaii-style_655090-455204.jpg")
+  provider      Provider
+  upvotes       Upvote[]
+  hostedRooms   Room[]   @relation("hostedBy")
+  memberOfRooms Room[]   @relation("roomMembers")
+  streams       Stream[]
+}
+
+model Stream {
+  id            String         @id @default(uuid())
+  type          StreamType
+  url           String
+  extractedId   String
+  title         String
+  img           String
+  active        Boolean        @default(true)
+  played        Boolean        @default(false)
+  playedTs      DateTime?
+  createdAt     DateTime       @default(now())
+  upvotes       Upvote[]
+  userId        String
+  user          User           @relation(fields: [userId], references: [id])
+  CurrentStream CurrentStream?
+  roomId        String
+  Room          Room           @relation(fields: [roomId], references: [id], onDelete: Cascade)
+}
+
+model CurrentStream {
+  id       String  @id @default(uuid())
+  img      String?
+  streamId String? @unique
+  stream   Stream? @relation(fields: [streamId], references: [id])
+  roomId   String? @unique
+  room     Room?   @relation(fields: [roomId], references: [id], onDelete: Cascade)
+}
+
+model Upvote {
+  id       String @id @default(uuid())
+  streamId String
+  userId   String
+  user     User   @relation(fields: [userId], references: [id])
+  stream   Stream @relation(fields: [streamId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, streamId])
+}
+
+model Room {
+  id            String         @id @default(uuid())
+  name          String
+  streams       Stream[]
+  isActive      Boolean        @default(true)
+  currentStream CurrentStream?
+  members       User[]         @relation("roomMembers")
+  hostId        String
+  host          User           @relation("hostedBy", fields: [hostId], references: [id])
+}
+
+enum StreamType {
+  Youtube
+}
+
+enum Provider {
+  Google
+  Credentials
+}
