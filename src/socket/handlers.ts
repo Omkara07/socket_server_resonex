@@ -19,35 +19,35 @@ export const HandleleaveRoomSocket = (socket: Socket, io: Server) => {
 };
 
 export const HandleSongQueueSocket = (socket: Socket, io: Server) => {
-    socket.on('queue-update', async ({ roomId, userId }) => {
+    socket.on('queue-update', async ({ roomId }) => {
         try {
-            const streams = await prismaClient.stream.findMany({
-                where: {
-                    roomId: roomId,
-                    played: false
-                },
-                include: {
-                    _count: {
-                        select: {
-                            upvotes: true
-                        }
-                    },
-                    upvotes: {
-                        where: {
-                            userId: userId
-                        }
-                    }
-                }
-            });
+            // const streams = await prismaClient.stream.findMany({
+            //     where: {
+            //         roomId: roomId,
+            //         played: false
+            //     },
+            //     include: {
+            //         _count: {
+            //             select: {
+            //                 upvotes: true
+            //             }
+            //         },
+            //         upvotes: {
+            //             where: {
+            //                 userId: userId
+            //             }
+            //         }
+            //     }
+            // });
 
-            // 🔥 Fix: Map streams to ensure `upvotes` is an integer
-            const formattedStreams = streams.map(({ _count, ...rest }) => ({
-                ...rest,
-                upvotes: _count.upvotes,
-                haveUpvoted: rest.upvotes.length ? true : false
-            }));
+            // // 🔥 Fix: Map streams to ensure `upvotes` is an integer
+            // const formattedStreams = streams.map(({ _count, ...rest }) => ({
+            //     ...rest,
+            //     upvotes: _count.upvotes,
+            //     haveUpvoted: rest.upvotes.length ? true : false
+            // }));
 
-            io.to(roomId).emit("updated-queue", { streams: formattedStreams });
+            io.to(roomId).emit("updated-queue", { roomId });
         } catch (e) {
             console.log(e);
         }
