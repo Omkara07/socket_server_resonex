@@ -30,7 +30,7 @@ export const HandleJoinRoomSocket = (socket: Socket, io: Server) => {
             socket.emit('host-player-state', { state: room.currentPlayerState });
         }
 
-        io.to(roomId).emit('joined-message', `${userName} joined ${roomName}`);
+        socket.to(roomId).emit('joined-message', `${userName} joined ${roomName}`);
     });
 
 };
