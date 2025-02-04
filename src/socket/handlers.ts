@@ -21,32 +21,6 @@ export const HandleleaveRoomSocket = (socket: Socket, io: Server) => {
 export const HandleSongQueueSocket = (socket: Socket, io: Server) => {
     socket.on('queue-update', async ({ roomId }) => {
         try {
-            // const streams = await prismaClient.stream.findMany({
-            //     where: {
-            //         roomId: roomId,
-            //         played: false
-            //     },
-            //     include: {
-            //         _count: {
-            //             select: {
-            //                 upvotes: true
-            //             }
-            //         },
-            //         upvotes: {
-            //             where: {
-            //                 userId: userId
-            //             }
-            //         }
-            //     }
-            // });
-
-            // // 🔥 Fix: Map streams to ensure `upvotes` is an integer
-            // const formattedStreams = streams.map(({ _count, ...rest }) => ({
-            //     ...rest,
-            //     upvotes: _count.upvotes,
-            //     haveUpvoted: rest.upvotes.length ? true : false
-            // }));
-
             io.to(roomId).emit("updated-queue", { roomId });
         } catch (e) {
             console.log(e);
@@ -94,20 +68,16 @@ export const HandleVideoStateSocket = (socket: Socket, io: Server) => {
     });
 
 
+    // Handle player state request from new users
     socket.on('request-player-state', ({ roomId }) => {
+        // Forward the request to the room (host will respond)
         socket.to(roomId).emit('request-player-state');
     });
 
-    socket.on('player-state', ({ roomId, state }) => {
-        socket.to(roomId).emit('player-state', { state });
-    });
-
-    socket.on('player-sync', ({ roomId, syncState }) => {
-        socket.to(roomId).emit('player-sync', { syncState });
-    });
-
-    socket.on('request-sync', ({ roomId }) => {
-        socket.to(roomId).emit('request-sync');
+    // Handle player state sync from host
+    socket.on('player-state-sync', ({ roomId, state }) => {
+        // Forward the state to all clients in the room except sender
+        socket.to(roomId).emit('player-state-sync', { state });
     });
 
 }
