@@ -1,7 +1,34 @@
 import { Server, Socket } from "socket.io";
 import { prismaClient } from "../prismaClient";
 
-const rooms = new Map();
+const rooms = new Map<string, {
+    activeUsers: Set<string>;
+    currentPlayerState: any;
+    hostId?: string;
+    hostSocketId?: string;
+}>();
+
+export function handleUserLeaving(socket: any, roomId: string) {
+    const room = rooms.get(roomId);
+    if (!room) return;
+
+    room.activeUsers.delete(socket.id);
+
+    // If the leaving user was the host
+    if (room.hostSocketId === socket.id) {
+        room.currentPlayerState = null;
+        room.hostSocketId = undefined;
+        socket.to(roomId).emit('host-disconnected');
+    }
+
+    // Clean up empty rooms
+    if (room.activeUsers.size === 0) {
+        rooms.delete(roomId);
+    }
+
+    socket.leave(roomId);
+}
+
 
 export const HandleJoinRoomSocket = (socket: Socket, io: Server) => {
     // socket.on("join-room", ({ roomId, userName, roomName }) => {
@@ -22,10 +49,14 @@ export const HandleJoinRoomSocket = (socket: Socket, io: Server) => {
             });
         }
 
-        const room = rooms.get(roomId);
+        const room = rooms.get(roomId)!;
         room.activeUsers.add(socket.id);
 
-        // If we have a stored state, send it immediately
+        // If this user is the host, store their socket ID
+        if (socket.data.userId === room.hostId) {
+            room.hostSocketId = socket.id;
+        }
+
         if (room.currentPlayerState) {
             socket.emit('host-player-state', { state: room.currentPlayerState });
         }
@@ -36,9 +67,23 @@ export const HandleJoinRoomSocket = (socket: Socket, io: Server) => {
 };
 
 export const HandleleaveRoomSocket = (socket: Socket, io: Server) => {
-    socket.on("leave-room", (roomId: string) => {
-        socket.leave(roomId);
-        socket.to(roomId).emit("left-message", `A user left the room`);
+    // socket.on("leave-room", (roomId: string) => {
+    //     socket.leave(roomId);
+    //     socket.to(roomId).emit("left-message", `A user left the room`);
+    // });
+
+    socket.on('host-leaving', ({ roomId }) => {
+        const room = rooms.get(roomId);
+        if (room) {
+            room.currentPlayerState = null;
+            room.hostSocketId = undefined;
+            io.to(roomId).emit('host-disconnected');
+        }
+    });
+
+    // Enhanced leave room handler
+    socket.on('leave-room', (roomId) => {
+        handleUserLeaving(socket, roomId);
     });
 };
 

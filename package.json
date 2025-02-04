@@ -5,7 +5,7 @@
   "scripts": {
     "build": "npm i && tsc -b",
     "start": "node dist/server.js",
-    "dev": "tsc -b && nodemon dist/index.js",
+    "dev": "tsc -b && nodemon dist/server.js",
     "clean": "rm -rf dist"
   },
   "author": "",
