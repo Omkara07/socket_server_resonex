@@ -1,14 +1,38 @@
 import { Server, Socket } from "socket.io";
 import { prismaClient } from "../prismaClient";
 
+const rooms = new Map();
 
 export const HandleJoinRoomSocket = (socket: Socket, io: Server) => {
-    socket.on("join-room", ({ roomId, userName, roomName }) => {
-        console.log("someone joined the room", roomId);
+    // socket.on("join-room", ({ roomId, userName, roomName }) => {
+    //     console.log("someone joined the room", roomId);
+    //     socket.join(roomId);
+
+    //     socket.to(roomId).emit("joined-message", `${userName} joined ${roomName}`);
+    // });
+
+    // When a user joins, immediately send them the current state if available
+    socket.on('join-room', ({ roomId, userName, roomName }) => {
         socket.join(roomId);
 
-        socket.to(roomId).emit("joined-message", `${userName} joined ${roomName}`);
+        if (!rooms.has(roomId)) {
+            rooms.set(roomId, {
+                activeUsers: new Set(),
+                currentPlayerState: null,
+            });
+        }
+
+        const room = rooms.get(roomId);
+        room.activeUsers.add(socket.id);
+
+        // If we have a stored state, send it immediately
+        if (room.currentPlayerState) {
+            socket.emit('host-player-state', { state: room.currentPlayerState });
+        }
+
+        io.to(roomId).emit('joined-message', `${userName} joined ${roomName}`);
     });
+
 };
 
 export const HandleleaveRoomSocket = (socket: Socket, io: Server) => {
@@ -68,16 +92,21 @@ export const HandleVideoStateSocket = (socket: Socket, io: Server) => {
     });
 
 
-    // Handle player state request from new users
-    socket.on('request-player-state', ({ roomId }) => {
-        // Forward the request to the room (host will respond)
-        socket.to(roomId).emit('request-player-state');
+    // Handle initial state request from new users
+    socket.on('request-initial-state', ({ roomId }) => {
+        // Forward request to host
+        socket.to(roomId).emit('request-initial-state');
     });
 
-    // Handle player state sync from host
-    socket.on('player-state-sync', ({ roomId, state }) => {
-        // Forward the state to all clients in the room except sender
-        socket.to(roomId).emit('player-state-sync', { state });
+    // Handle host state broadcast
+    socket.on('host-player-state', ({ roomId, state }) => {
+        // Store current state in room data
+        const room = rooms.get(roomId);
+        if (room) {
+            room.currentPlayerState = state;
+        }
+        // Broadcast to all clients except sender
+        socket.to(roomId).emit('host-player-state', { state });
     });
 
 }
