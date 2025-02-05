@@ -14,13 +14,6 @@ export function handleUserLeaving(socket: any, roomId: string) {
 
     room.activeUsers.delete(socket.id);
 
-    // If the leaving user was the host
-    if (room.hostSocketId === socket.id) {
-        room.currentPlayerState = null;
-        room.hostSocketId = undefined;
-        socket.to(roomId).emit('host-disconnected');
-    }
-
     // Clean up empty rooms
     if (room.activeUsers.size === 0) {
         rooms.delete(roomId);
@@ -61,10 +54,10 @@ export const HandleJoinRoomSocket = (socket: Socket, io: Server) => {
 };
 
 export const HandleleaveRoomSocket = (socket: Socket, io: Server) => {
-    socket.on("leave-room", (roomId: string) => {
-        socket.leave(roomId);
-        socket.to(roomId).emit("left-message", `A user left the room`);
-    });
+    // socket.on("leave-room", (roomId: string) => {
+    //     socket.leave(roomId);
+    //     socket.to(roomId).emit("left-message", `A user left the room`);
+    // });
 
     socket.on('host-leaving', ({ roomId }) => {
         const room = rooms.get(roomId);
@@ -76,10 +69,10 @@ export const HandleleaveRoomSocket = (socket: Socket, io: Server) => {
         }
     });
 
-    // // Enhanced leave room handler
-    // socket.on('leave-room', (roomId) => {
-    //     handleUserLeaving(socket, roomId);
-    // });
+    // Enhanced leave room handler
+    socket.on('leave-room', (roomId) => {
+        handleUserLeaving(socket, roomId);
+    });
 };
 
 export const HandleSongQueueSocket = (socket: Socket, io: Server) => {
