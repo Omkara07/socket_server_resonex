@@ -69,6 +69,7 @@ export const HandleleaveRoomSocket = (socket: Socket, io: Server) => {
     socket.on('host-leaving', ({ roomId }) => {
         const room = rooms.get(roomId);
         if (room) {
+            handleUserLeaving(socket, roomId);
             room.currentPlayerState = null;
             room.hostSocketId = undefined;
             socket.to(roomId).emit('host-disconnected');
