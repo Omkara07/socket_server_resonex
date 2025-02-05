@@ -59,7 +59,7 @@ server.listen(PORT, () => {
     console.log(`Server is running`);
 
     const SELF_CALL_INTERVAL = 840000;
-    const SELF_URL = process.env.SERVER_URL || `http://localhost:${PORT}/self-call`;
+    const SELF_URL = process.env.PING_URL || `http://localhost:${PORT}/self-call`;
 
     setInterval(async () => {
         try {
