@@ -31,12 +31,6 @@ export function handleUserLeaving(socket: any, roomId: string) {
 
 
 export const HandleJoinRoomSocket = (socket: Socket, io: Server) => {
-    // socket.on("join-room", ({ roomId, userName, roomName }) => {
-    //     console.log("someone joined the room", roomId);
-    //     socket.join(roomId);
-
-    //     socket.to(roomId).emit("joined-message", `${userName} joined ${roomName}`);
-    // });
 
     // When a user joins, immediately send them the current state if available
     socket.on('join-room', ({ roomId, userName, roomName }) => {
@@ -67,24 +61,24 @@ export const HandleJoinRoomSocket = (socket: Socket, io: Server) => {
 };
 
 export const HandleleaveRoomSocket = (socket: Socket, io: Server) => {
-    // socket.on("leave-room", (roomId: string) => {
-    //     socket.leave(roomId);
-    //     socket.to(roomId).emit("left-message", `A user left the room`);
-    // });
+    socket.on("leave-room", (roomId: string) => {
+        socket.leave(roomId);
+        socket.to(roomId).emit("left-message", `A user left the room`);
+    });
 
     socket.on('host-leaving', ({ roomId }) => {
         const room = rooms.get(roomId);
         if (room) {
             room.currentPlayerState = null;
             room.hostSocketId = undefined;
-            io.to(roomId).emit('host-disconnected');
+            socket.to(roomId).emit('host-disconnected');
         }
     });
 
-    // Enhanced leave room handler
-    socket.on('leave-room', (roomId) => {
-        handleUserLeaving(socket, roomId);
-    });
+    // // Enhanced leave room handler
+    // socket.on('leave-room', (roomId) => {
+    //     handleUserLeaving(socket, roomId);
+    // });
 };
 
 export const HandleSongQueueSocket = (socket: Socket, io: Server) => {
