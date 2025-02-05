@@ -42,6 +42,13 @@ export const HandleJoinRoomSocket = (socket: Socket, io: Server) => {
         // If this user is the host, store their socket ID
         if (socket.data.userId === room.hostId) {
             room.hostSocketId = socket.id;
+            socket.to(roomId).emit('host-reconnected');
+        }
+        else {
+            // If no host present, send special state indicating video should be paused
+            if (!room.hostSocketId) {
+                socket.emit('host-disconnected');
+            }
         }
 
         if (room.currentPlayerState) {
